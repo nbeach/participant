@@ -18,12 +18,11 @@ export const createParticipantGroup = (participants: ReadonlyArray<Participant>)
             .flat()
             .forEach(dispatch)
 
-        reactionPromises.forEach(promise => promise.then(reaction =>
-            toActions(reaction)
-                .flat()
-                .forEach(dispatch),
-        ))
-
+        reactionPromises.forEach(promise =>
+            promise
+                .then(toActions)
+                .then(actions => actions.flat().forEach(dispatch)),
+        )
     }
 
     actionsHandlers = participants
@@ -32,6 +31,15 @@ export const createParticipantGroup = (participants: ReadonlyArray<Participant>)
 
     return {
         close: () => actionsHandlers = [],
+    }
+}
+
+// TODO: Test this
+const webWorkerParticipant = (file: string): Participant => {
+    return dispatch => {
+        const worker = new Worker(file)
+        worker.onmessage = event => dispatch(event.data)
+        return event => worker.postMessage(event)
     }
 }
 
@@ -52,6 +60,9 @@ const not = <T>(func: (param: T) => boolean): (param: T) => boolean => {
 const isUndefined = (value: any): value is undefined => {
     return value === undefined
 }
+
+
+
 
 
 
