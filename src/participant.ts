@@ -3,7 +3,7 @@ import {Action} from "./action"
 export type Reaction = void | Action | ReadonlyArray<Action>
 export type ActionHandler = (event: Action) => Reaction | Promise<Reaction>
 export type Dispatch = <T extends Action>(event: T) => void
-export type Participant = ((dispatch: Dispatch) => ActionHandler | void)
+export type Participant = (dispatch: Dispatch) => ActionHandler | void
 export interface ParticipantGroup { readonly close: () => void }
 
 export const createParticipantGroup = (participants: ReadonlyArray<Participant>): ParticipantGroup => {
