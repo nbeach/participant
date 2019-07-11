@@ -1,10 +1,9 @@
-
-import {ActionResponder, asParticipant, createParticipantGroup, Dispatch, Participant} from "./participant"
+import {ActionHandler, asParticipant, createParticipantGroup, Dispatch, Participant} from "./participant"
 import {Action} from "./action"
 
 type Reducer<S, E> = (state: S, event: E) => S
 
-const createStateStore = <T>(initialState: T, reducer: Reducer<T, Action>): ActionResponder => {
+const createStateStore = <T>(initialState: T, reducer: Reducer<T, Action>): ActionHandler => {
     let state = initialState
 
     return (event: Action) => {
@@ -13,11 +12,10 @@ const createStateStore = <T>(initialState: T, reducer: Reducer<T, Action>): Acti
     }
 }
 
-const asyncResolver: ActionResponder = async (event: Action) => {
+const asyncResolver: ActionHandler = async (event: Action) => {
     const async = await Promise.resolve({})
     return { type: "DATA_LOADED", async }
 }
-
 
 const appUserInterface: Participant = (dispatch) => {
     return (event: Action) => {

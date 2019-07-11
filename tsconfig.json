@@ -10,7 +10,7 @@
     "strict": true,
     "noImplicitReturns": true,
     "suppressImplicitAnyIndexErrors": true,
-    "lib": ["es6", "dom"],
+    "lib": ["esnext", "dom"],
     "types": ["node", "mocha", "sinon-chai"],
     "declaration" : true
   }
