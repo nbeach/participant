@@ -1,5 +1,5 @@
-import {Participant} from "./participant"
-import {Action} from "./action"
+import {Participant, Reaction} from "./participant"
+import {isPromise, isUndefined, not} from "./util"
 
 export const webWorkerParticipant = (file: string): Participant => {
     return dispatch => {
@@ -10,9 +10,20 @@ export const webWorkerParticipant = (file: string): Participant => {
 }
 
 export const initWorkerParticipant = (participant: Participant) => {
-    const dispatch = (action: Action) => self.postMessage(action, "*")
+    const sendMessage = (reaction: Reaction) => self.postMessage(reaction, undefined as any)
+
+    const dispatch = (action: Reaction | Promise<Reaction>) => {
+        if (isPromise(action)) {
+            action.then(sendMessage)
+        } else if (not(isUndefined)(action)) {
+            sendMessage(action)
+        }
+    }
+
     const handler = participant(dispatch)
     if (handler !== undefined) {
-        self.addEventListener("message", (event) => handler(event.data), false)
+        self.addEventListener("message", (event) => {
+            dispatch(handler(event.data))
+        }, false)
     }
 }
