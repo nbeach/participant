@@ -16,12 +16,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/nbeach/<TODO>.git"
+    "url": "git://github.com/nbeach/participant.git"
   },
   "author": "Nicholas Beach <nicholas.c.beach@gmail.com> (http://nicholasbeach.com)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nbeach/<TODO>/issues"
+    "url": "https://github.com/nbeach/participant/issues"
   },
   "keywords": [],
   "scripts": {

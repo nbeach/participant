@@ -34,14 +34,7 @@ export const createParticipantGroup = (participants: ReadonlyArray<Participant>)
     }
 }
 
-// TODO: Test this
-const webWorkerParticipant = (file: string): Participant => {
-    return dispatch => {
-        const worker = new Worker(file)
-        worker.onmessage = event => dispatch(event.data)
-        return event => worker.postMessage(event)
-    }
-}
+
 
 export const asParticipant = (handler: ActionHandler): Participant => (dispatch) => handler
 
@@ -60,9 +53,3 @@ const not = <T>(func: (param: T) => boolean): (param: T) => boolean => {
 const isUndefined = (value: any): value is undefined => {
     return value === undefined
 }
-
-
-
-
-
-

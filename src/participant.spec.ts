@@ -10,7 +10,7 @@ describe("Participant", () => {
         let dispatchFunction: Dispatch | null = null
         let receivedActions: ReadonlyArray<Action> = []
 
-        const dispatchHijacker: Participant = (dispatch) => { dispatchFunction = dispatch}
+        const dispatchCapturer: Participant = (dispatch) => { dispatchFunction = dispatch}
         const actionAccumulator = asParticipant((action) => {
             if (action.type !== "INITIATING") {
                 receivedActions = [...receivedActions, action]
@@ -24,7 +24,7 @@ describe("Participant", () => {
 
         it("dispatch actions to participants", () => {
             createParticipantGroup([
-                dispatchHijacker,
+                dispatchCapturer,
                 actionAccumulator,
             ])
 
@@ -36,7 +36,7 @@ describe("Participant", () => {
 
             it("action", async () => {
                 createParticipantGroup([
-                    dispatchHijacker,
+                    dispatchCapturer,
                     actionAccumulator,
                     asParticipant((action) => action.type === "INITIATING" ? { type: "GENERATED_ACTION" } : undefined),
                 ])
@@ -47,7 +47,7 @@ describe("Participant", () => {
 
             it("arrays of actions", async () => {
                 createParticipantGroup([
-                    dispatchHijacker,
+                    dispatchCapturer,
                     actionAccumulator,
                     asParticipant((action) => action.type === "INITIATING" ? [{ type: "ACTION_1" }, { type: "ACTION_2" }] : undefined),
                 ])
@@ -58,7 +58,7 @@ describe("Participant", () => {
 
             it("promise for an action", async () => {
                 createParticipantGroup([
-                    dispatchHijacker,
+                    dispatchCapturer,
                     actionAccumulator,
                     asParticipant((action) => action.type === "INITIATING" ? Promise.resolve({ type: "GENERATED_ACTION" }) : undefined),
                 ])
@@ -70,7 +70,7 @@ describe("Participant", () => {
 
             it("promise for an array of actions", async () => {
                 createParticipantGroup([
-                    dispatchHijacker,
+                    dispatchCapturer,
                     actionAccumulator,
                     asParticipant((action) => action.type === "INITIATING" ? Promise.resolve([{ type: "ACTION_1" }, { type: "ACTION_2" }]) : undefined),
                 ])
@@ -86,7 +86,7 @@ describe("Participant", () => {
 
             it("undefined", async () => {
                 createParticipantGroup([
-                    dispatchHijacker,
+                    dispatchCapturer,
                     actionAccumulator,
                     asParticipant((action) => undefined),
                 ])
@@ -98,7 +98,7 @@ describe("Participant", () => {
 
             it("promise for undefined", async () => {
                 createParticipantGroup([
-                    dispatchHijacker,
+                    dispatchCapturer,
                     actionAccumulator,
                     asParticipant((action) => action.type === "INITIATING" ? Promise.resolve(undefined) : undefined),
                 ])
@@ -114,7 +114,7 @@ describe("Participant", () => {
 
             it("no longer dispatches message to participants", async () => {
                 const group = createParticipantGroup([
-                    dispatchHijacker,
+                    dispatchCapturer,
                     actionAccumulator,
                 ])
 
