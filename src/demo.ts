@@ -1,5 +1,6 @@
 import {ActionHandler, asParticipant, createParticipantGroup, Dispatch, Participant} from "./participant"
 import {Action} from "./action"
+import {webWorkerParticipant} from "./worker"
 
 type Reducer<S, E> = (state: S, event: E) => S
 
@@ -26,5 +27,6 @@ const appUserInterface: Participant = (dispatch) => {
 const group = createParticipantGroup([
     asParticipant(createStateStore({}, (state, event) => ({}))),
     (dispatch) => asyncResolver,
+    webWorkerParticipant("foo.js"),
     appUserInterface,
 ])
