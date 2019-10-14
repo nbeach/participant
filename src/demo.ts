@@ -27,6 +27,6 @@ const appUserInterface: Participant = (dispatch) => {
 const group = createParticipantGroup([
     asParticipant(createStateStore({}, (state, event) => ({}))),
     (dispatch) => asyncResolver,
-    webWorkerParticipant("foo.js"),
+    webWorkerParticipant(new Worker("foo.js")),
     appUserInterface,
 ])

@@ -1,9 +1,8 @@
 import {Participant, Reaction} from "./participant"
 import {isPromise, isUndefined, not} from "./util"
 
-export const webWorkerParticipant = (file: string): Participant => {
+export const webWorkerParticipant = (worker: Worker): Participant => {
     return dispatch => {
-        const worker = new Worker(file)
         worker.onmessage = event => dispatch(event.data)
         return event => worker.postMessage(event)
     }
@@ -27,3 +26,4 @@ export const initWorkerParticipant = (participant: Participant) => {
         }, false)
     }
 }
+
