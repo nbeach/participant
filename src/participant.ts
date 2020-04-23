@@ -1,47 +1,64 @@
-import {Action} from "./action"
-import {isPromise, isUndefined, not} from "./util"
+import {isUndefined, not} from "./util"
+import {Event, EventFactory, isEvent} from "./event"
+import {Call} from "./call"
 
-export type Reaction = void | Action | ReadonlyArray<Action>
-export type ActionHandler = (action: Action) => Reaction | Promise<Reaction>
-export type Dispatch = (action: Reaction | Promise<Reaction>) => void
-export type Participant = (dispatch: Dispatch) => ActionHandler | void
-export interface ParticipantGroup { readonly close: () => void }
 
-const dispatch = (reaction: Reaction | Promise<Reaction>, handlers: ReadonlyArray<ActionHandler>) => {
-    if (isPromise(reaction)) {
-        reaction.then(action => dispatch(action, handlers))
-    } else {
-        toActions(reaction)
-            .flatMap(action => handlers.map(handler => handler(action)))
-            .forEach(reaction => dispatch(reaction, handlers))
-    }
+export type Publisher = (publish: Publish, call: Call) => void
+export type Subscriber<T = unknown> = (event: Event<T>, call: Call) => Reaction | ReactionPromise
+export type Participant = (publish: Publish, call: Call) => Subscriber | null | undefined | void
+
+export type Reaction = void | undefined | null | Event | ReadonlyArray<Event>
+export type ReactionPromise = Promise<Reaction> | ReadonlyArray<Promise<Reaction>>
+
+export type Publish = (event: Event<any>) => void
+export interface ParticipantGroup {
+    readonly close: () => void
+    readonly add: (participant: Participant) => void
+    readonly remove: (participant: Participant) => void
 }
 
+export const filterTo = <T>(eventFactory: EventFactory<T>, subscriber: Subscriber<T>): Subscriber<T> => {
+    return (event, call) => isEvent(eventFactory, event) ? subscriber(event, call) : undefined
+}
+export const subscriber = (subscriber: Subscriber<any>): Participant => () => subscriber
+export const publisher = (publisher: Publisher): Participant => publisher
+
+
+
 export const createParticipantGroup = (participants: ReadonlyArray<Participant>): ParticipantGroup => {
-    let actionsHandlers: ReadonlyArray<ActionHandler> = []
-    let initComplete = false
-    let actionQueue: ReadonlyArray<Reaction | Promise<Reaction>> = []
-
-    const dispatchOrQueue = (action: Reaction | Promise<Reaction>) => {
-        initComplete ? dispatch(action, actionsHandlers) : actionQueue = [...actionQueue, action]
-    }
-
-    actionsHandlers = participants
-        .map(participant => participant(dispatchOrQueue))
-        .filter(participants => participants !== undefined) as ReadonlyArray<ActionHandler>
-
-    initComplete = true
-    actionQueue.forEach(dispatchOrQueue)
-    actionQueue = []
+    let actionsHandlers: ReadonlyArray<Subscriber<any>> = []
+    // let initComplete = false
+    // let actionQueue: ReadonlyArray<Reaction | Promise<Reaction>> = []
+    //
+    // const dispatchOrQueue = (action: Reaction | Promise<Reaction>) => {
+    //     initComplete ? publish(action, actionsHandlers) : actionQueue = [...actionQueue, action]
+    // }
+    //
+    // actionsHandlers = participants
+    //     .map(participant => participant(dispatchOrQueue))
+    //     .filter(participants => participants !== undefined) as ReadonlyArray<Subscriber>
+    //
+    // initComplete = true
+    // actionQueue.forEach(dispatchOrQueue)
+    // actionQueue = []
 
     return {
         close: () => actionsHandlers = [],
+        add: (participant) => {},
+        remove: (participant) => {},
     }
 }
 
-export const asParticipant = (handler: ActionHandler): Participant => (dispatch) => handler
-
-const toActions = (reaction: Reaction): ReadonlyArray<Action> => {
-    return [reaction].flat().filter(not(isUndefined))
+const publish = (reaction: Reaction | ReactionPromise, subscribers: ReadonlyArray<Subscriber>) => {
+    // if (isPromise(reaction)) {
+    //     reaction.then(event => publish(event, subscribers))
+    // } else {
+    //     toEvents(reaction)
+    //         .flatMap(event => subscribers.map(handler => handler(event, call)))
+    //         .forEach(reaction => publish(reaction, subscribers))
+    // }
 }
 
+const toEvents = (reaction: Reaction): ReadonlyArray<Event> => {
+    return [reaction].flat().filter(not(isUndefined))
+}

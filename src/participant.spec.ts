@@ -1,111 +1,111 @@
-import {asParticipant, createParticipantGroup, Dispatch, Participant} from "./participant"
-import {Action} from "./action"
+import {createParticipantGroup, Participant, Publish, subscriber} from "./participant"
 import {expect} from "chai"
+import {Event} from "./event"
 
 const sleep = (time: number) => new Promise(resolve => setTimeout(resolve, time))
 
 describe("Participant", () => {
 
     describe(createParticipantGroup.name, () => {
-        let dispatchFunction: Dispatch | null = null
-        let receivedActions: ReadonlyArray<Action> = []
+        let dispatchFunction: Publish | null = null
+        let receivedEvents: ReadonlyArray<Event> = []
 
         const dispatchCapturer: Participant = (dispatch) => { dispatchFunction = dispatch}
-        const actionAccumulator = asParticipant((action) => {
-            if (action.type !== "INITIATING") {
-                receivedActions = [...receivedActions, action]
+        const eventAccumulator = subscriber((event) => {
+            if (event.type !== "INITIATING") {
+                receivedEvents = [...receivedEvents, event]
             }
         })
 
         beforeEach(() => {
             dispatchFunction = null
-            receivedActions = []
+            receivedEvents = []
         })
 
-        it("dispatch actions to participants", () => {
+        it("dispatch events to participants", () => {
             createParticipantGroup([
                 dispatchCapturer,
-                actionAccumulator,
+                eventAccumulator,
             ])
 
             dispatchFunction!({ type: "TEST" })
-            expect(receivedActions).to.eql([{ type: "TEST" }])
+            expect(receivedEvents).to.eql([{ type: "TEST" }])
         })
 
-        describe("dispatches the result returned by action handlers when it is a", () => {
+        describe("dispatches the result returned by event handlers when it is a", () => {
 
-            it("action", async () => {
+            it("event", async () => {
                 createParticipantGroup([
                     dispatchCapturer,
-                    actionAccumulator,
-                    asParticipant((action) => action.type === "INITIATING" ? { type: "GENERATED_ACTION" } : undefined),
+                    eventAccumulator,
+                    subscriber((event) => event.type === "INITIATING" ? { type: "GENERATED_EVENT" } : undefined),
                 ])
 
                 dispatchFunction!({ type: "INITIATING" })
-                expect(receivedActions.filter(action => action.type !== "INITIATING")).to.eql([{ type: "GENERATED_ACTION" }])
+                expect(receivedEvents.filter(event => event.type !== "INITIATING")).to.eql([{ type: "GENERATED_EVENT" }])
             })
 
-            it("arrays of actions", async () => {
+            it("arrays of events", async () => {
                 createParticipantGroup([
                     dispatchCapturer,
-                    actionAccumulator,
-                    asParticipant((action) => action.type === "INITIATING" ? [{ type: "ACTION_1" }, { type: "ACTION_2" }] : undefined),
+                    eventAccumulator,
+                    subscriber((event) => event.type === "INITIATING" ? [{ type: "EVENT_1" }, { type: "EVENT_2" }] : undefined),
                 ])
 
                 dispatchFunction!({ type: "INITIATING" })
-                expect(receivedActions).to.eql([{ type: "ACTION_1" }, { type: "ACTION_2" }])
+                expect(receivedEvents).to.eql([{ type: "EVENT_1" }, { type: "EVENT_2" }])
             })
 
-            it("promise for an action", async () => {
+            it("promise for an event", async () => {
                 createParticipantGroup([
                     dispatchCapturer,
-                    actionAccumulator,
-                    asParticipant((action) => action.type === "INITIATING" ? Promise.resolve({ type: "GENERATED_ACTION" }) : undefined),
+                    eventAccumulator,
+                    subscriber((event) => event.type === "INITIATING" ? Promise.resolve({ type: "GENERATED_EVENT" }) : undefined),
                 ])
 
                 dispatchFunction!({ type: "INITIATING" })
                 await sleep(1)
-                expect(receivedActions).to.eql([{ type: "GENERATED_ACTION" }])
+                expect(receivedEvents).to.eql([{ type: "GENERATED_EVENT" }])
             })
 
-            it("promise for an array of actions", async () => {
+            it("promise for an array of events", async () => {
                 createParticipantGroup([
                     dispatchCapturer,
-                    actionAccumulator,
-                    asParticipant((action) => action.type === "INITIATING" ? Promise.resolve([{ type: "ACTION_1" }, { type: "ACTION_2" }]) : undefined),
+                    eventAccumulator,
+                    subscriber((event) => event.type === "INITIATING" ? Promise.resolve([{ type: "EVENT_1" }, { type: "EVENT_2" }]) : undefined),
                 ])
 
                 dispatchFunction!({ type: "INITIATING" })
                 await sleep(1)
-                expect(receivedActions).to.eql([{ type: "ACTION_1" }, { type: "ACTION_2" }])
+                expect(receivedEvents).to.eql([{ type: "EVENT_1" }, { type: "EVENT_2" }])
             })
 
         })
 
-        describe("does not dispatch the result returned by action handlers when it is a", () => {
+        describe("does not dispatch the result returned by event handlers when it is a", () => {
 
             it("undefined", async () => {
                 createParticipantGroup([
                     dispatchCapturer,
-                    actionAccumulator,
-                    asParticipant((action) => undefined),
+                    eventAccumulator,
+                    subscriber((event) => undefined),
                 ])
 
                 dispatchFunction!({ type: "INITIATING" })
                 await sleep(1)
-                expect(receivedActions).to.eql([])
+                expect(receivedEvents).to.eql([])
             })
 
             it("promise for undefined", async () => {
                 createParticipantGroup([
                     dispatchCapturer,
-                    actionAccumulator,
-                    asParticipant((action) => action.type === "INITIATING" ? Promise.resolve(undefined) : undefined),
+                    eventAccumulator,
+                    subscriber((event) => event.type === "INITIATING" ? Promise.resolve(undefined) : undefined),
                 ])
 
                 dispatchFunction!({ type: "INITIATING" })
                 await sleep(1)
-                expect(receivedActions).to.eql([])
+                expect(receivedEvents).to.eql([])
             })
 
         })
@@ -115,13 +115,13 @@ describe("Participant", () => {
             it("no longer dispatches message to participants", async () => {
                 const group = createParticipantGroup([
                     dispatchCapturer,
-                    actionAccumulator,
+                    eventAccumulator,
                 ])
 
                 group.close()
                 dispatchFunction!({ type: "TEST" })
                 await sleep(1)
-                expect(receivedActions).to.eql([])
+                expect(receivedEvents).to.eql([])
             })
 
         })

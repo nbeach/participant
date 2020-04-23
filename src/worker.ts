@@ -1,9 +1,9 @@
-import {Participant, Reaction} from "./participant"
+import {Participant, Reaction, ReactionPromise} from "./participant"
 import {isPromise, isUndefined, not} from "./util"
 
 export const webWorkerParticipant = (worker: Worker): Participant => {
-    return dispatch => {
-        worker.onmessage = event => dispatch(event.data)
+    return (publish) => {
+        worker.onmessage = event => publish(event.data)
         return event => worker.postMessage(event)
     }
 }
@@ -11,18 +11,18 @@ export const webWorkerParticipant = (worker: Worker): Participant => {
 export const initWorkerParticipant = (participant: Participant) => {
     const sendMessage = (reaction: Reaction) => self.postMessage(reaction, undefined as any)
 
-    const dispatch = (action: Reaction | Promise<Reaction>) => {
-        if (isPromise(action)) {
-            action.then(sendMessage)
-        } else if (not(isUndefined)(action)) {
-            sendMessage(action)
+    const publish = (reaction: Reaction | ReactionPromise) => {
+        if (isPromise(reaction)) {
+            reaction.then(sendMessage)
+        } else if (not(isUndefined)(reaction)) {
+            sendMessage(reaction)
         }
     }
 
-    const handler = participant(dispatch)
+    const handler = participant(publish, call)
     if (handler !== undefined) {
         self.addEventListener("message", (event) => {
-            dispatch(handler(event.data))
+            publish(handler(event.data))
         }, false)
     }
 }
